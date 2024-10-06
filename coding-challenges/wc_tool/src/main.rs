@@ -20,6 +20,8 @@ enum Commands{
     Line,
   #[command(about ="Count the number of words in the file", short_flag = 'w')]
     Words,
+  #[command(about = "Count the number of characters in the file", short_flag = 'm')]
+    Characters,
 }
 
 
@@ -63,10 +65,19 @@ async fn count_words(filename:String)->anyhow::Result<usize>{
     };
     Ok(count_words)
 }
+async fn count_characters(filename:String)->anyhow::Result<usize>{
+   let file = File::open(filename)?;
+    let mut buf_reader = BufReader::new(file);
+    let mut content = String::new();
+    buf_reader.read_to_string(&mut content)?;
+    
+    let number_of_characters = content.chars().count();
+    
+    Ok(number_of_characters)
+}
 #[tokio::main]
 async fn main()-> anyhow::Result<()>{
     let cli = Args::parse();
-    
     
     match cli.command {
         Some(Commands::Count) => {
@@ -75,11 +86,15 @@ async fn main()-> anyhow::Result<()>{
         },
         Some(Commands::Line)=> {
             let lines_number = count_lines("Test.txt".to_string()).await?;
-            println!("{lines_number}")
+            println!("{lines_number}");
         },
         Some(Commands::Words)=> {
             let words_number = count_words("Test.txt".to_string()).await?;
-            println!("{words_number}")
+            println!("{words_number}");
+        },
+        Some(Commands::Characters)=>{
+            let characters_number = count_characters("Test.txt".to_string()).await?;
+            println!("{characters_number}")
         },
         None =>println!("Run with --help to see all the commands")
     
