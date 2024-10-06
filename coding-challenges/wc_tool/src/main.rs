@@ -15,15 +15,15 @@ enum Commands{
     /// Count the number of bytes in the text
    #[command(about = "Count the number of bytes in a file", short_flag = 'c')] 
     Count,
+    /// count the number of lines in the text
   #[command(about = "Count the number of lines in a file", short_flag = 'l')]
-    Line
+    Line,
+  #[command(about ="Count the number of words in the file", short_flag = 'w')]
+    Words,
 }
 
 
-fn count_bytes_in_file<P>(filename: P) -> io::Result<usize>
-where
-    P: AsRef<Path>,
-{
+fn count_bytes_in_file(filename: String) -> io::Result<usize> {
     let file = File::open(filename)?;
     let mut reader = BufReader::new(file);
     let mut buffer = Vec::new();
@@ -48,6 +48,21 @@ async fn count_lines(filename:String)->anyhow::Result<usize>{
     Ok(count_lines)
 }
 
+async fn count_words(filename:String)->anyhow::Result<usize>{
+    let mut count_words= 0;
+    if let Ok(words) = read_lines(filename){
+        words.for_each(|word|{
+            if let Ok(w) = word{
+                if !w.trim().is_empty(){
+                let collection: Vec<&str> = w.split_whitespace().collect();
+                count_words += collection.len();
+                }
+            }
+        });
+       
+    };
+    Ok(count_words)
+}
 #[tokio::main]
 async fn main()-> anyhow::Result<()>{
     let cli = Args::parse();
@@ -61,6 +76,10 @@ async fn main()-> anyhow::Result<()>{
         Some(Commands::Line)=> {
             let lines_number = count_lines("Test.txt".to_string()).await?;
             println!("{lines_number}")
+        },
+        Some(Commands::Words)=> {
+            let words_number = count_words("Test.txt".to_string()).await?;
+            println!("{words_number}")
         },
         None =>println!("Run with --help to see all the commands")
     
